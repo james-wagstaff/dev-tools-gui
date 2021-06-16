@@ -4,7 +4,7 @@ $my_app = $args[0]
 $env = $args[1]
 
 # Get config_server_key json
-$config_server_key = $(cf service-key config-server config-server-key | sed '1,2d') | ConvertFrom-Json
+$config_server_key = $(cf service-key config-server config-server-key | Select-Object -Skip 1) | ConvertFrom-Json
 # Get config server details from config_server_key variable
 $access_token_uri = $config_server_key.access_token_uri
 $client_id = $config_server_key.client_id
