@@ -20,10 +20,10 @@ $Headers = @{
 }
 
 # Get the token using apps client credentials
-$config_server_token = $(Invoke-WebRequest "$access_token_uri" -Headers $Headers -Body @{grant_type = 'client_credentials' } | ConvertFrom-Json).access_token
+$config_server_token = $(Invoke-WebRequest "$access_token_uri" -UseBasicParsing -Headers $Headers -Body @{grant_type = 'client_credentials' } | ConvertFrom-Json).access_token
 
 # Get the properties of my_app, in default profile
-$my_app_properties = $(Invoke-WebRequest "$uri/$my_app/$env" -H @{"Authorization" = "bearer $config_server_token" })
+$my_app_properties = $(Invoke-WebRequest "$uri/$my_app/$env" -UseBasicParsing -H @{"Authorization" = "bearer $config_server_token" })
 
 $json = $($my_app_properties | ConvertFrom-Json)
 $($json.propertySources | % {
