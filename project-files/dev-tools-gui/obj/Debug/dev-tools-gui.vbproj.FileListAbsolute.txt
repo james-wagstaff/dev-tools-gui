@@ -1,0 +1,17 @@
+C:\Users\James.Wagstaff\Documents\dev-setup\dev-tools-gui\bin\Debug\dev-tools-gui.exe.config
+C:\Users\James.Wagstaff\Documents\dev-setup\dev-tools-gui\bin\Debug\dev-tools-gui.exe
+C:\Users\James.Wagstaff\Documents\dev-setup\dev-tools-gui\bin\Debug\dev-tools-gui.pdb
+C:\Users\James.Wagstaff\Documents\dev-setup\dev-tools-gui\bin\Debug\dev-tools-gui.xml
+C:\Users\James.Wagstaff\Documents\dev-setup\dev-tools-gui\obj\Debug\dev-tools-gui.vbproj.AssemblyReference.cache
+C:\Users\James.Wagstaff\Documents\dev-setup\dev-tools-gui\obj\Debug\MainWindow.g.vb
+C:\Users\James.Wagstaff\Documents\dev-setup\dev-tools-gui\obj\Debug\Application.g.vb
+C:\Users\James.Wagstaff\Documents\dev-setup\dev-tools-gui\obj\Debug\dev-tools-gui_MarkupCompile.cache
+C:\Users\James.Wagstaff\Documents\dev-setup\dev-tools-gui\obj\Debug\dev-tools-gui_MarkupCompile.lref
+C:\Users\James.Wagstaff\Documents\dev-setup\dev-tools-gui\obj\Debug\MainWindow.baml
+C:\Users\James.Wagstaff\Documents\dev-setup\dev-tools-gui\obj\Debug\dev-tools-gui.g.resources
+C:\Users\James.Wagstaff\Documents\dev-setup\dev-tools-gui\obj\Debug\dev_tools_gui.Resources.resources
+C:\Users\James.Wagstaff\Documents\dev-setup\dev-tools-gui\obj\Debug\dev-tools-gui.vbproj.GenerateResource.cache
+C:\Users\James.Wagstaff\Documents\dev-setup\dev-tools-gui\obj\Debug\dev-tools-gui.vbproj.CoreCompileInputs.cache
+C:\Users\James.Wagstaff\Documents\dev-setup\dev-tools-gui\obj\Debug\dev-tools-gui.exe
+C:\Users\James.Wagstaff\Documents\dev-setup\dev-tools-gui\obj\Debug\dev-tools-gui.xml
+C:\Users\James.Wagstaff\Documents\dev-setup\dev-tools-gui\obj\Debug\dev-tools-gui.pdb
