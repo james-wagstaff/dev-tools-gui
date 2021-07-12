@@ -1,6 +1,9 @@
+#include other scripts
+. "$(Get-Location)/project-files/application-properties.ps1"
+. "$(Get-Location)/project-files/system-properties.ps1"
+
 #Load gui
 $syncHash = [hashtable]::Synchronized(@{})
-
 
 function loadGui {
     $inputXml = Get-Content -Path './project-files/dev-tools-gui/MainWindow.xaml'
@@ -14,6 +17,15 @@ function loadGui {
     $syncHash.Window.showDialog() | out-null
 }
 
+function addTextBoxListeners {
+    $syncHash.propertiesUpdateButton.Add_Click( {
+            setCFApi($syncHash.cfApiText.Text)
+            setCFUser($syncHash.cfUserText.Text)
+            setCFPassword($syncHash.cfPasswordText.Text)
+            [System.Windows.MessageBox]::Show("Properties updated")
+        })
+}
+
 function init {
     loadGuiObjectReferences #Load object references before showing dialog
     loadContent #load combobox content for properties section
@@ -25,49 +37,42 @@ function loadGuiObjectReferences {
         $syncHash.Add($($_.Name), $syncHash.Window.FindName($_.Name))
     }
 }
+
 function loadContent {
     $syncHash.properties_repo_location.Text = getRepoLocation
-
+    
     $syncHash.properties_project.Items.Clear()
     $repos = Get-ChildItem "$(getRepoLocation)" -directory | Select-Object Name
     $repos | % {
         $syncHash.properties_project.AddChild($_.Name)
     }
-    $environments = 'dev', 'qa', 'prod'
-    $environments | % {
-        $syncHash.properties_environment.AddChild($_)
-    }
+
+    $syncHash.properties_environment.ItemsSource = cfEnvironments
+    
     $syncHash.properties_project.SelectedIndex = 0
     $syncHash.properties_environment.SelectedIndex = 0
+    $syncHash.cfApiText.Text = getCFApi
+    $syncHash.cfUserText.Text = getCFUser
+    $syncHash.cfPasswordText.Text = getCFPassword
 }
 
 function addButtonListeners {
-    setRepoLocation
-    getAppProperties
-    copyButtonListener
-    
-}
-
-function getRepoLocation {
-    $repo_root = [System.Environment]::GetEnvironmentVariable('REPOSITORIES_ROOT', [System.EnvironmentVariableTarget]::User)
-    return $(if ([string]::IsNullOrEmpty($repo_root)) { './' } else { $repo_root })
-}
-function setRepoLocation {
     $syncHash.properties_set_repo_location.add_click( {
-            $DirDialog = New-Object System.Windows.Forms.FolderBrowserDialog;
-            $result = $DirDialog.ShowDialog();
-            if ($result -eq 'OK') {
-                [System.Environment]::SetEnvironmentVariable('REPOSITORIES_ROOT', $DirDialog.SelectedPath, [System.EnvironmentVariableTarget]::User)
-                $syncHash.properties_repo_location.Text = $DirDialog.SelectedPath
-                loadContent
-            }
-        })
+        setRepoLocation
+        loadContent
+    })
+    getAppProperties
+    addTextBoxListeners
 }
 
-function copyButtonListener {
-    $syncHash.properties_copy_button.add_click( {
-            Set-Clipboard -Value $syncHash.properties_output.text
-        })
+function setLoading {
+    $syncHash.properties_get_properties.IsEnabled = $False
+    $syncHash.properties_get_properties.Content = "Loading . . ."
+}
+
+function global:resetLoading {
+    $syncHash.properties_get_properties.IsEnabled = $True
+    $syncHash.properties_get_properties.Content = "get properties"
 }
 
 $newRunspace = [runspacefactory]::CreateRunspace()
@@ -75,51 +80,47 @@ $newRunspace.ApartmentState = "STA"
 $newRunspace.ThreadOptions = "ReuseThread"         
 $newRunspace.Open()
 $newRunspace.SessionStateProxy.SetVariable("syncHash", $syncHash)
+
 function getAppProperties {
     $syncHash.properties_get_properties.add_click( {
-            $syncHash.properties_get_properties.IsEnabled = $False
-            $syncHash.properties_get_properties.Content = "Loading . . ."
+            $cfMessage = $(allFineWithCf)
+            if (-Not [string]::IsNullOrEmpty($cfMessage) ) {
+                [System.Windows.MessageBox]::Show($cfMessage)
+                return
+            }
+
+            setLoading
             $syncHash.proj = $syncHash.properties_project.SelectedValue
             $syncHash.env = $syncHash.properties_environment.SelectedValue
             $syncHash.workingDirectory = Get-Location
             $psCmd = [PowerShell]::Create().AddScript( {
+                   
+                    Invoke-Expression "cf orgs"
+                    if (-Not $?) {
+                        [System.Windows.MessageBox]::Show("Trying to login")
+                        Invoke-Expression "cf login -a $getCFApi -u $getCFUser -p $getCFPassword -o identifix_cms -s Development"
+                    }
+
                     $parseProps = "$($syncHash.workingDirectory)\project-files\parseAppProperties.ps1"
                     $output = Invoke-Expression "$parseProps $($syncHash.proj) $($syncHash.env)"
-                   # $output = ./$parseProps $($syncHash.proj) $($syncHash.env)
-                     if (-Not $?) {
+
+                    if (-Not $?) {
                         $syncHash.Window.Dispatcher.invoke(
                             [action] { 
-                                $syncHash.properties_output.Text = "
-                                Could not get properties. Possible solutions:
-                                1) Check vpn connection
-                                2) Install jq -> choco install jq
-                                "
                                 $syncHash.properties_get_properties.IsEnabled = $True
                                 $syncHash.properties_get_properties.Content = "get properties"
                             }
                         )
                         return
                     }
-                    if ([string]::IsNullOrEmpty($output)) {
-                        $syncHash.Window.Dispatcher.invoke(
-                            [action] { 
-                                $syncHash.properties_output.Text = 'Please check vpn connection'
-                                $syncHash.properties_get_properties.IsEnabled = $True
-                                $syncHash.properties_get_properties.Content = "get properties"
-                            }
-                        )
-                        return
-                    }
-                    $output = $output.split(' ')
-                    $sb = [System.Text.StringBuilder]::new()
-                    $output | % {
-                        $sb.AppendLine($_)
-                    }
+                   
                     $syncHash.Window.Dispatcher.invoke(
                         [action] { 
                             $syncHash.properties_get_properties.IsEnabled = $True
                             $syncHash.properties_get_properties.Content = "get properties"
-                            $syncHash.properties_output.Text = $sb.toString()
+                            $outputFile = "$($syncHash.properties_repo_location.Text)\$($syncHash.proj)\application.properties"
+                            Out-File -FilePath $outputFile -InputObject $output
+                            [System.Windows.MessageBox]::Show("Properties saved to $outputFile")
                         }
                     )
                 })

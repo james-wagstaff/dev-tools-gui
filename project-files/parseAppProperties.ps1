@@ -27,9 +27,13 @@ $my_app_properties = $(Invoke-WebRequest "$uri/$my_app/$env" -UseBasicParsing -H
 
 $json = $($my_app_properties | ConvertFrom-Json)
 $($json.propertySources | % {
-        foreach ($info in $_.source.PSObject.Properties) {
+    foreach ($info in $_.source.PSObject.Properties) {
             if ($info.Name -ne 'spring.profiles' -and $info.Name -ne 'configScope') {
-                Add-Content "$my_app.properties" "$($info.Name)=$($info.Value)"
+                if($info.Value.startsWith('{') -and $info.Value.endsWith('}')) {
+                    Add-Content "$my_app.properties" "$($info.Name)=`"$($info.Value)`""
+                } else {
+                    Add-Content "$my_app.properties" "$($info.Name)=$($info.Value)"
+                }
             }
         }
     })
